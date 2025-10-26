@@ -77,7 +77,6 @@ def test_twitch_bandwidth(
         if proc.stderr:
             for line in iter(proc.stderr.readline, ''):
                 # Parse progress lines (from -progress)
-                print(line)
                 if '=' in line and not line.startswith('['):
                     match = progress_pattern.match(line.strip())
                     if match:
