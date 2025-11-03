@@ -10,25 +10,21 @@ class StreamStats:
     avg_bitrate_kbps: float
     peak_bitrate_kbps: float
     duration_sec: int
-    dropped_frames: int = 0
+    ping: float
 
     @property
     def quality(self) -> int:
-
-        return (self.avg_bitrate_kbps/self.target_bitrate_kbps) * 100
+        return int((self.avg_bitrate_kbps/self.target_bitrate_kbps) * 100)
+    
+    def update_ping(self, ping) -> None:
+        self.ping = ping
 
     def __str__(self):
         # Using self's attributes to construct the output string
         return (
             '\n'
-            + '=' * 60
-            + '\n📊 BANDWIDTH TEST RESULTS\n'
-            + '=' * 60
-            + f'\nTarget Bitrate:    {self.target_bitrate_kbps} kbps'  # No target_bitrate_kbps given in constructor
             f'\nActual Avg Bitrate:  {self.avg_bitrate_kbps:.1f} kbps'
-            f'\nPeak Bitrate:        {self.peak_bitrate_kbps:.1f} kbps'
-            f'\nDropped Frames:      {self.dropped_frames}'
-            f'\nDuration:            {self.duration_sec:.1f} seconds'
+            f'\nPing:  {self.ping:.1f} kbps'
         )
 
 

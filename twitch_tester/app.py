@@ -1,9 +1,17 @@
-from twitch_tester.ffmpeg import test_twitch_bandwidth
+from twitch_tester.bin import test_twitch_bandwidth
 from twitch_tester.models import IngestServer
 from twitch_tester.lib import rtmps_ping
 
 from typing import Iterable
 from urllib.parse import urlparse
+
+
+'''
+У нас есть список серверов
+В первый проход мы получаем пинг до них
+
+Во сторой проход скорость загрузки
+'''
 
 
 class App:
@@ -24,14 +32,17 @@ class App:
         self.ping_results = {server.name: self.test_ping(server) for server in servers}
         for server in servers:
             self.map_servers[server.name] = server
-            self.ffmpeg_results[server.name] = self.test_ffmpeg(server)
+            self.ffmpeg_results[server.name] = self.test_binupload(server)
+        for server in self.ffmpeg_results.keys():
+            ping_result = self.ping_results[server]
+            if ping_result.get('success'):
+                self.ffmpeg_results[server].update_ping(ping_result['total_rtt_sec'])
 
-        print(self.ffmpeg_results)
         sorted_results = sorted(self.ffmpeg_results.items(), key=lambda kv: kv[1].quality, reverse=True)
         for loc, stat in sorted_results:
             rtt = int(self.ping_results.get(loc, {}).get('total_rtt_sec', 0) * 1000)
             print(f'\n{self.map_servers[loc].url_template}')
-            print(f'{loc} - {stat.quality:.2f} {rtt}')
+            print(f'{loc} - {stat.quality:.2f} {stat.ping} avgb: {stat.avg_bitrate_kbps} kbps')
 
     def test_ping(self, server: IngestServer):
         host = self._extract_host(server.url_template)
@@ -40,10 +51,10 @@ class App:
         print(ping_result.get('total_rtt_sec', 0) * 1000)
         return ping_result
 
-    def test_ffmpeg(self, server: IngestServer):
+    def test_binupload(self, server: IngestServer):
         print(f'Starting {server.name} {server.url_template} {self.duration}s bandwidth test at {self.target_bitrate_kbps} kbps... ', end='')
         url = f'{server.url_template.format(stream_key=self.stream_key)}?bandwidthtest'
-        result = test_twitch_bandwidth(url, duration=self.duration, target_bitrate_kbps=self.target_bitrate_kbps)
+        result = test_twitch_bandwidth(url, self.stream_key, duration=self.duration)
         if not result:
             print('error')
             return
