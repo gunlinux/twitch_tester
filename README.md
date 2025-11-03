@@ -12,8 +12,7 @@ A Python application for testing Twitch stream functionality.
 
 2. Install dependencies:
 
-   install ffmpeg
-
+   make
    ```bash
    uv sync
    ```
